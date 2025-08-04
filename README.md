@@ -28,7 +28,7 @@ pip install .
 ## 🚀 Quick Start
 
 ```python
-from ticker import Ticker
+from growfin import Ticker
 
 ticker = Ticker("RELIANCE", debug=True)
 

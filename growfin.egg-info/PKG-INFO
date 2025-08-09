@@ -1,0 +1,16 @@
+Metadata-Version: 2.4
+Name: growfin
+Version: 0.1.0
+Summary: Fetch historical and live NSE stock data with Groww API
+Author: Subham Giri
+Author-email: your_email@example.com
+Requires-Python: >=3.7
+Requires-Dist: requests
+Requires-Dist: pandas
+Requires-Dist: pytz
+Requires-Dist: tzlocal
+Dynamic: author
+Dynamic: author-email
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

@@ -23,48 +23,74 @@ class ParameterValidationError(ValueError):
     pass
 
 #start data_to_dataframe with helper function
+
 def data_to_dataframe(data: Dict) -> pd.DataFrame:
     """
-    Convert Groww API candle data (possibly wrapped inside 'data') into a pandas DataFrame with IST times.
+    Convert Groww API candle data dictionary into a pandas DataFrame with IST times.
+    
+    This function processes raw API candle data and converts Unix timestamps to 
+    IST timezone-aware datetime objects (naive), ensuring all numeric columns 
+    are properly typed.
+    
+    Args:
+        data (Dict): API response dictionary containing 'candles' key with 
+                    nested list of [timestamp, open, high, low, close, volume]
+    
+    Returns:
+        pd.DataFrame: DataFrame with columns:
+            - unix_timestamp (int): Original Unix timestamp
+            - time_ist (datetime): IST timezone datetime (naive)
+            - open (float): Opening price
+            - high (float): Highest price
+            - low (float): Lowest price
+            - close (float): Closing price
+            - volume (float): Trading volume
+    
+    Raises:
+        TypeError: If data is not a dictionary
+        KeyError: If 'candles' key is missing from data
+    
+    Example:
+        >>> api_data = {'candles': [[1640995200, 100.5, 101.0, 99.5, 100.8, 1000]]}
+        >>> df = data_to_dataframe(api_data)
+        >>> print(df.columns.tolist())
+        ['unix_timestamp', 'time_ist', 'open', 'high', 'low', 'close', 'volume']
     """
-
     # Input validation
     if not isinstance(data, dict):
         logger.error(f"Expected dict, got {type(data).__name__}")
         raise TypeError(f"Data must be a dictionary, got {type(data).__name__}")
-
-    # Unwrap if the structure contains a top-level "data" key
-    if "data" in data and isinstance(data["data"], dict):
-        data = data["data"]
-
+    
     if 'candles' not in data:
         logger.error("Missing 'candles' key in data dictionary")
         raise KeyError("Data dictionary must contain 'candles' key")
-
+    
     if not data['candles']:
         logger.warning("Empty candles data provided")
         return _create_empty_dataframe()
-
+    
     # Filter valid candle entries
     valid_candles = _filter_valid_candles(data['candles'])
+    
     if not valid_candles:
         logger.warning("No valid candles data after filtering")
         return _create_empty_dataframe()
-
+    
     # Create DataFrame
     df = pd.DataFrame(
-        valid_candles,
+        valid_candles, 
         columns=['unix_timestamp', 'open', 'high', 'low', 'close', 'volume']
     )
-
+    
     # Convert timestamp to IST and insert as second column
     df.insert(1, 'time_ist', _convert_timestamp_to_ist(df['unix_timestamp']))
-
+    
     # Ensure numeric data types
     df = _ensure_numeric_columns(df)
-
+    
     logger.info(f"Successfully converted {len(df)} candles to DataFrame")
     return df
+
 
 def _create_empty_dataframe() -> pd.DataFrame:
     """Create empty DataFrame with expected column structure."""
